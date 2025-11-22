@@ -63,10 +63,32 @@ export default {
           DEFAULT: "hsl(var(--pale-sunshine))",
           foreground: "hsl(var(--pale-sunshine-foreground))",
         },
+        lavender: {
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          700: "#7c3aed",
+        },
+        mint: {
+          50: "#f0fdf4",
+          100: "#dcfce7",
+          200: "#bbf7d0",
+          300: "#86efac",
+          700: "#15803d",
+        },
+        peach: {
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          300: "#fdba74",
+          700: "#c2410c",
+        },
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
         medium: "var(--shadow-medium)",
+        glow: "0 0 20px -5px currentColor",
       },
       transitionTimingFunction: {
         smooth: "var(--transition-smooth)",

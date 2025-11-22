@@ -28,7 +28,8 @@ interface SchedulingState {
 type Action =
   | { type: 'ADD_STUDENT'; slotId: string; student: Student }
   | { type: 'REMOVE_STUDENT'; slotId: string; studentId: string }
-  | { type: 'BOOK_MAKEUP'; slotId: string; studentName: string };
+  | { type: 'BOOK_MAKEUP'; slotId: string; studentName: string }
+  | { type: 'RESCHEDULE_RECURRING'; oldSlotId: string; newSlotId: string; studentName: string };
 
 const initialState: SchedulingState = {
   timeSlots: [
@@ -51,8 +52,6 @@ const initialState: SchedulingState = {
         { id: 's3', name: 'Olivia Davis', bookingType: 'recurring' },
         { id: 's4', name: 'Noah Miller', bookingType: 'recurring' },
         { id: 's5', name: 'Ava Garcia', bookingType: 'intro' },
-        { id: 's6', name: 'Ethan Martinez', bookingType: 'makeup' },
-        { id: 's7', name: 'Sophia Rodriguez', bookingType: 'recurring' },
       ],
       capacity: 5,
     },
@@ -66,7 +65,24 @@ const initialState: SchedulingState = {
       ],
       capacity: 5,
     },
-    // Tuesday
+    {
+      id: 'mon-6pm',
+      day: 'Monday',
+      time: '6:00 PM',
+      students: [],
+      capacity: 5,
+    },
+    // Tuesday - FULLY BOOKED SLOT
+    {
+      id: 'tue-3pm',
+      day: 'Tuesday',
+      time: '3:00 PM',
+      students: [
+        { id: 's28', name: 'Grace Martinez', bookingType: 'recurring' },
+        { id: 's29', name: 'William Garcia', bookingType: 'recurring' },
+      ],
+      capacity: 5,
+    },
     {
       id: 'tue-4pm',
       day: 'Tuesday',
@@ -92,24 +108,33 @@ const initialState: SchedulingState = {
       ],
       capacity: 5,
     },
-    // Wednesday
+    // Wednesday - COMPLETELY EMPTY SLOT
     {
       id: 'wed-3pm',
       day: 'Wednesday',
       time: '3:00 PM',
-      students: [],
+      students: [
+        { id: 's30', name: 'Henry Wilson', bookingType: 'recurring' },
+      ],
       capacity: 5,
     },
     {
       id: 'wed-4pm',
       day: 'Wednesday',
       time: '4:00 PM',
+      students: [],
+      capacity: 5,
+    },
+    {
+      id: 'wed-5pm',
+      day: 'Wednesday',
+      time: '5:00 PM',
       students: [
-        { id: 's19', name: 'Abigail Young', bookingType: 'recurring' },
+        { id: 's31', name: 'Luna Davis', bookingType: 'makeup' },
       ],
       capacity: 5,
     },
-    // Thursday
+    // Thursday - URGENCY (4/5 filled)
     {
       id: 'thu-4pm',
       day: 'Thursday',
@@ -131,6 +156,18 @@ const initialState: SchedulingState = {
       ],
       capacity: 5,
     },
+    {
+      id: 'thu-6pm',
+      day: 'Thursday',
+      time: '6:00 PM',
+      students: [
+        { id: 's32', name: 'Aria Brown', bookingType: 'recurring' },
+        { id: 's33', name: 'Jack Robinson', bookingType: 'recurring' },
+        { id: 's34', name: 'Lily Clark', bookingType: 'makeup' },
+        { id: 's35', name: 'Owen Lewis', bookingType: 'intro' },
+      ],
+      capacity: 5,
+    },
     // Friday
     {
       id: 'fri-3pm',
@@ -140,6 +177,15 @@ const initialState: SchedulingState = {
         { id: 's25', name: 'Sofia Green', bookingType: 'recurring' },
         { id: 's26', name: 'Matthew Adams', bookingType: 'recurring' },
         { id: 's27', name: 'Avery Baker', bookingType: 'makeup' },
+      ],
+      capacity: 5,
+    },
+    {
+      id: 'fri-4pm',
+      day: 'Friday',
+      time: '4:00 PM',
+      students: [
+        { id: 's36', name: 'Zoe Martinez', bookingType: 'recurring' },
       ],
       capacity: 5,
     },
@@ -200,6 +246,72 @@ function schedulingReducer(state: SchedulingState, action: Action): SchedulingSt
         }),
       };
     }
+    case 'RESCHEDULE_RECURRING': {
+      const recurringStudent: Student = {
+        id: `recurring-${Date.now()}`,
+        name: action.studentName,
+        bookingType: 'recurring',
+      };
+      return {
+        ...state,
+        currentStudent: {
+          ...state.currentStudent,
+          recurringSlot: action.newSlotId,
+        },
+        timeSlots: state.timeSlots.map((slot) => {
+          // Remove from old slot
+          if (slot.id === action.oldSlotId) {
+            return {
+              ...slot,
+              students: slot.students.filter(
+                (s) => s.name !== action.studentName || s.bookingType !== 'recurring'
+              ),
+            };
+          }
+          // Add to new slot
+          if (slot.id === action.newSlotId && slot.students.length < slot.capacity) {
+            return {
+              ...slot,
+              students: [...slot.students, recurringStudent],
+            };
+          }
+          return slot;
+        }),
+      };
+    }
+    case 'RESCHEDULE_RECURRING': {
+      const recurringStudent: Student = {
+        id: `recurring-${Date.now()}`,
+        name: action.studentName,
+        bookingType: 'recurring',
+      };
+      return {
+        ...state,
+        currentStudent: {
+          ...state.currentStudent,
+          recurringSlot: action.newSlotId,
+        },
+        timeSlots: state.timeSlots.map((slot) => {
+          // Remove from old slot
+          if (slot.id === action.oldSlotId) {
+            return {
+              ...slot,
+              students: slot.students.filter(
+                (s) => s.name !== action.studentName || s.bookingType !== 'recurring'
+              ),
+            };
+          }
+          // Add to new slot
+          if (slot.id === action.newSlotId && slot.students.length < slot.capacity) {
+            return {
+              ...slot,
+              students: [...slot.students, recurringStudent],
+            };
+          }
+          return slot;
+        }),
+      };
+    }
     default:
       return state;
   }
@@ -210,6 +322,7 @@ interface SchedulingContextType {
   addStudent: (slotId: string, student: Student) => void;
   removeStudent: (slotId: string, studentId: string) => void;
   bookMakeup: (slotId: string, studentName: string) => void;
+  rescheduleRecurring: (oldSlotId: string, newSlotId: string, studentName: string) => void;
 }
 
 const SchedulingContext = createContext<SchedulingContextType | undefined>(undefined);
@@ -229,8 +342,12 @@ export function SchedulingProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'BOOK_MAKEUP', slotId, studentName });
   };
 
+  const rescheduleRecurring = (oldSlotId: string, newSlotId: string, studentName: string) => {
+    dispatch({ type: 'RESCHEDULE_RECURRING', oldSlotId, newSlotId, studentName });
+  };
+
   return (
-    <SchedulingContext.Provider value={{ state, addStudent, removeStudent, bookMakeup }}>
+    <SchedulingContext.Provider value={{ state, addStudent, removeStudent, bookMakeup, rescheduleRecurring }}>
       {children}
     </SchedulingContext.Provider>
   );
